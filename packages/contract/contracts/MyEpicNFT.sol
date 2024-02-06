@@ -34,7 +34,7 @@ contract MyEpicNFT is ERC721URIStorage {
       _safeMint(msg.sender, newItemId);
 
       // NFT データを設定します。
-      _setTokenURI(newItemId, "Valuable data!");
+      _setTokenURI(newItemId, "https://api.npoint.io/7a8f388d13850600da54");
 
       // NFTがいつ誰に作成されたかを確認します。
       console.log("An NFT w/ ID %s has been minted to %s", newItemId, msg.sender);

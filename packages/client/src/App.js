@@ -43,6 +43,15 @@ const App = () => {
       // **** イベントリスナーをここで設定 ****
       // この時点で、ユーザーはウォレット接続が済んでいます。
       setupEventListener();
+
+      let chainId = await ethereum.request({ method: "eth_chainId" });
+      console.log("Connected to chain " + chainId);
+      // 0xaa36a7(11155111) は　Sepolia の ID です。
+      const sepoliaChainId = "0xaa36a7";
+      if (chainId !== sepoliaChainId) {
+        alert("You are not connected to the Sepolia Test Network!");
+      }
+
     } else {
       console.log("No authorized account found");
     }

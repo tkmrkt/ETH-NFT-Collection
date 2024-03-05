@@ -74,5 +74,42 @@ describe('MyEpicNFT', function () {
         .to.emit(MyEpicNFT, 'NewEpicNFTMinted')
         .withArgs(owner.address, 1);
     });
+  });
+  describe('getMaxMints', function () {
+    it('should get max mints', async function () {
+      const { MyEpicNFT } = await loadFixture(
+        deployMyEpicNFTFixture,
+      );
+      const maxMints = await MyEpicNFT.getMaxMints();
+      expect(maxMints).to.equal(10);
+    });
+  });  
+  describe('getTotalMints', function () {
+    it('should get total mints', async function () {
+      const { MyEpicNFT } = await loadFixture(
+        deployMyEpicNFTFixture,
+      );
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      const totalMints = await MyEpicNFT.getTotalMints();
+      expect(totalMints).to.equal(2);
+    });
+  });  
+  describe('makeAnEpicNFT', function () {
+    it('cannot make over max', async function () {
+      const { MyEpicNFT } = await loadFixture(
+        deployMyEpicNFTFixture,
+      );
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await expect(MyEpicNFT.makeAnEpicNFT()).to.be.revertedWith('cannot mint over max 10nfts.');
+    });
   });  
 });

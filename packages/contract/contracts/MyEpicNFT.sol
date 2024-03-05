@@ -100,6 +100,14 @@ contract MyEpicNFT is ERC721URIStorage {
         return thirdWords[rand];
     }
 
+    function getMaxMints() public pure returns (uint256) {
+        return 10;
+    }
+
+    function getTotalMints() public view returns (uint256) {
+        return _tokenIds.current();
+    }
+
     // ユーザーが NFT を取得するために実行する関数です。
     function makeAnEpicNFT() public {
         // NFT が Mint されるときのカウンターをインクリメントします。
@@ -107,6 +115,8 @@ contract MyEpicNFT is ERC721URIStorage {
 
         // 現在のtokenIdを取得します。tokenIdは1から始まります。
         uint256 newItemId = _tokenIds.current();
+
+        require(newItemId < 10, "cannot mint over max 10nfts.");
 
         // 3つの配列からそれぞれ1つの単語をランダムに取り出します。
         string memory first = pickRandomFirstWord(newItemId);

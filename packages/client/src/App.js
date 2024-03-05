@@ -15,6 +15,8 @@ const App = () => {
    * ユーザーのウォレットアドレスを格納するために使用する状態変数を定義します。
    */
   const [currentAccount, setCurrentAccount] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isNotSepolia, setIsNotSepolia] = useState(false);
   /*この段階でcurrentAccountの中身は空*/
   console.log("currentAccount: ", currentAccount);
   /*
@@ -50,6 +52,9 @@ const App = () => {
       const sepoliaChainId = "0xaa36a7";
       if (chainId !== sepoliaChainId) {
         alert("You are not connected to the Sepolia Test Network!");
+        setIsNotSepolia(true);
+      } else {
+        setIsNotSepolia(false);
       }
 
     } else {
@@ -124,6 +129,7 @@ const App = () => {
     try {
       const { ethereum } = window;
       if (ethereum) {
+        setIsLoading(true);
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const connectedContract = new ethers.Contract(
@@ -135,7 +141,7 @@ const App = () => {
         let nftTxn = await connectedContract.makeAnEpicNFT();
         console.log("Mining...please wait.");
         await nftTxn.wait();
-  
+        setIsLoading(false);  
         console.log(
           `Mined, see transaction: https://sepolia.etherscan.io/tx/${nftTxn.hash}`
         );
@@ -143,6 +149,7 @@ const App = () => {
         console.log("Ethereum object doesn't exist!");
       }
     } catch (error) {
+      setIsLoading(false);  
       console.log(error);
     }
   };  
@@ -156,6 +163,13 @@ const App = () => {
       Connect to Wallet
     </button>
   );
+  const renderConnectedContainer = () => {
+    return isLoading ? 
+      (<span className="loading">Loading...</span>) : isNotSepolia ? (<></>) :
+      (<button onClick={askContractToMintNft} className="cta-button connect-wallet-button">
+        Mint NFT
+      </button>);
+  }
   /*
    * ページがロードされたときに useEffect()内の関数が呼び出されます。
    */
@@ -173,12 +187,7 @@ const App = () => {
           // Connect to Walletを表示しないようにします。*/}
           {currentAccount === ""
             ? renderNotConnectedContainer()
-            : (
-              /* ユーザーが Mint NFT ボタンを押した時に、askContractToMintNft 関数を呼び出します　*/
-              <button onClick={askContractToMintNft} className="cta-button connect-wallet-button">
-                Mint NFT
-              </button>
-            )
+            : renderConnectedContainer()
           }
         </div>
         <div className="footer-container">

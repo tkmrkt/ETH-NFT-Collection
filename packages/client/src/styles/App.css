@@ -89,6 +89,12 @@
   font-weight: bold;
 }
 
+.loading {
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
 /* KeyFrames */
 @-webkit-keyframes gradient-animation {
   0% {

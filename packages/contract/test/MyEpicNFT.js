@@ -81,7 +81,7 @@ describe('MyEpicNFT', function () {
         deployMyEpicNFTFixture,
       );
       const maxMints = await MyEpicNFT.getMaxMints();
-      expect(maxMints).to.equal(10);
+      expect(maxMints).to.equal(20);
     });
   });  
   describe('getTotalMints', function () {
@@ -109,7 +109,17 @@ describe('MyEpicNFT', function () {
       await MyEpicNFT.makeAnEpicNFT();
       await MyEpicNFT.makeAnEpicNFT();
       await MyEpicNFT.makeAnEpicNFT();
-      await expect(MyEpicNFT.makeAnEpicNFT()).to.be.revertedWith('cannot mint over max 10nfts.');
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await MyEpicNFT.makeAnEpicNFT();
+      await expect(MyEpicNFT.makeAnEpicNFT()).to.be.revertedWith('cannot mint over max 20nfts.');
     });
   });  
 });

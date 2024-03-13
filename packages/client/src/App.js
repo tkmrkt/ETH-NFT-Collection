@@ -2,13 +2,15 @@
 // useEffect と useState 関数を React.js からインポートしています。
 import myEpicNft from "./utils/MyEpicNFT.json";
 import { ethers } from "ethers";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "./styles/App.css";
 import twitterLogo from "./assets/twitter-logo.svg";
 
 // Constantsを宣言する: constとは値書き換えを禁止した変数を宣言する方法です。
 const TWITTER_HANDLE = "あなたのTwitterのハンドルネームを貼り付けてください";
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
+const CONTRACT_ADDRESS =
+"0xc5B62EafcD640982E20F6541dF016D8b8dc747d6";
 
 const App = () => {
   /*
@@ -17,6 +19,9 @@ const App = () => {
   const [currentAccount, setCurrentAccount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isNotSepolia, setIsNotSepolia] = useState(false);
+  const [tokenIds, setTokenIds] = useState([]);
+  const setupsRef = useRef(0);
+
   /*この段階でcurrentAccountの中身は空*/
   console.log("currentAccount: ", currentAccount);
   /*
@@ -60,6 +65,18 @@ const App = () => {
     } else {
       console.log("No authorized account found");
     }
+    const provider = new ethers.providers.Web3Provider(ethereum);
+    const signer = provider.getSigner();
+    // NFT が発行されます。
+    const connectedContract = new ethers.Contract(
+      CONTRACT_ADDRESS,
+      myEpicNft.abi,
+      signer
+    );
+    const _totalMints = await connectedContract.getTotalMints();
+    const _tokenIds = [...Array(Number(_totalMints)).keys()];
+    setTokenIds(_tokenIds);
+
   };
 
   /*
@@ -91,6 +108,12 @@ const App = () => {
     }
   };
 
+  const listener = (from, tokenId) => {
+    console.log(from, tokenId.toNumber());
+    alert(
+      `あなたのウォレットに NFT を送信しました。gemcase に表示されるまで数分かかることがあります。NFT へのリンクはこちらです: https://gemcase.vercel.app/view/evm/sepolia/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`,
+    );
+  }
   // App.js
   // setupEventListener 関数を定義します。
   // MyEpicNFT.sol の中で event が　emit された時に、
@@ -108,13 +131,11 @@ const App = () => {
           signer
         );
         // Event が　emit される際に、コントラクトから送信される情報を受け取っています。
-        connectedContract.on("NewEpicNFTMinted", (from, tokenId) => {
-          console.log(from, tokenId.toNumber());
-          alert(
-            `あなたのウォレットに NFT を送信しました。gemcase に表示されるまで数分かかることがあります。NFT へのリンクはこちらです: https://gemcase.vercel.app/view/evm/sepolia/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`,
-          );
-        });
-        console.log("Setup event listener!");
+        if (setupsRef.current === 0) {
+          connectedContract.on("NewEpicNFTMinted", listener);
+          console.log("Setup event listener!");
+        }
+        setupsRef.current = setupsRef.current + 1;
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -124,8 +145,6 @@ const App = () => {
   };  
 
   const askContractToMintNft = async () => {
-    const CONTRACT_ADDRESS =
-      "0x944E424cA816dB413e2cAa048A164fEbFdAcD533";
     try {
       const { ethereum } = window;
       if (ethereum) {
@@ -138,13 +157,17 @@ const App = () => {
           signer
         );
         console.log("Going to pop wallet now to pay gas...");
-        let nftTxn = await connectedContract.makeAnEpicNFT();
+        let nftTxn = await connectedContract.makeAnEpicNFT().catch((e) => alert(e.message));
         console.log("Mining...please wait.");
-        await nftTxn.wait();
+        await nftTxn.wait().catch((e) => alert(e.message));
         setIsLoading(false);  
         console.log(
           `Mined, see transaction: https://sepolia.etherscan.io/tx/${nftTxn.hash}`
         );
+        const _totalMints = await connectedContract.getTotalMints();
+        const _tokenIds = [...Array(Number(_totalMints)).keys()];
+        setTokenIds(_tokenIds);
+    
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -170,6 +193,9 @@ const App = () => {
         Mint NFT
       </button>);
   }
+  const handleClickToken = (id) => {
+    window.open(`https://gemcase.vercel.app/view/evm/sepolia/${CONTRACT_ADDRESS}/${id}`)
+  }
   /*
    * ページがロードされたときに useEffect()内の関数が呼び出されます。
    */
@@ -189,6 +215,7 @@ const App = () => {
             ? renderNotConnectedContainer()
             : renderConnectedContainer()
           }
+          {tokenIds.map(id => (<button onClick={() => handleClickToken(id + 1)} className="cta-button gem-button">{`gemcase:${id + 1}`}</button>))}
         </div>
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />

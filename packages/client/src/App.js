@@ -10,7 +10,7 @@ import twitterLogo from "./assets/twitter-logo.svg";
 const TWITTER_HANDLE = "あなたのTwitterのハンドルネームを貼り付けてください";
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 const CONTRACT_ADDRESS =
-"0xc5B62EafcD640982E20F6541dF016D8b8dc747d6";
+"0xfd72cACD27Ff27aec4e1465777aaA06AEF504169";
 
 const App = () => {
   /*
@@ -157,7 +157,10 @@ const App = () => {
           signer
         );
         console.log("Going to pop wallet now to pay gas...");
-        let nftTxn = await connectedContract.makeAnEpicNFT().catch((e) => alert(e.message));
+        const params = {
+          value: ethers.utils.parseEther("0.00001")
+        };        
+        let nftTxn = await connectedContract.makeAnEpicNFT(params).catch((e) => alert(e.message));
         console.log("Mining...please wait.");
         await nftTxn.wait().catch((e) => alert(e.message));
         setIsLoading(false);  

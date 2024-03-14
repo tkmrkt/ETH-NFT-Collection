@@ -6,6 +6,9 @@ pragma solidity ^0.8.18;
 // いくつかの OpenZeppelin のコントラクトをインポートします。
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+// royalty
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
 // utils ライブラリをインポートして文字列の処理を行います。
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "hardhat/console.sol";
@@ -15,7 +18,7 @@ import {Base64} from "./libraries/Base64.sol";
 
 // インポートした OpenZeppelin のコントラクトを継承しています。
 // 継承したコントラクトのメソッドにアクセスできるようになります。
-contract MyEpicNFT is ERC721URIStorage {
+contract MyEpicNFT is ERC721URIStorage, Ownable, ERC2981 {
     // OpenZeppelin　が　tokenIds　を簡単に追跡するために提供するライブラリを呼び出しています
     using Counters for Counters.Counter;
     // _tokenIdsを初期化（_tokenIds = 0）
@@ -46,9 +49,42 @@ contract MyEpicNFT is ERC721URIStorage {
         "Elephant"
     ];
 
+    event NewEpicNFTMinted(address sender, uint256 tokenId);
+
     // NFT トークンの名前とそのシンボルを渡します。
-    constructor() ERC721("SquareNFT", "SQUARE") {
+    constructor() Ownable() ERC721("SquareNFT", "SQUARE") {
         console.log("This is my NFT contract.");
+        // ロイヤリティは万分率で指定する（1000/10000 = 10%）
+        _setDefaultRoyalty(owner(), 1000);
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC721, ERC2981) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function setDefaultRoyalty(
+        address receiver,
+        uint96 feeNumerator
+    ) external onlyOwner {
+        _setDefaultRoyalty(receiver, feeNumerator);
+    }
+
+    function deleteDefaultRoyalty() external onlyOwner {
+        _deleteDefaultRoyalty();
+    }
+
+    function setTokenRoyalty(
+        uint256 tokenId,
+        address receiver,
+        uint96 feeNumerator
+    ) external onlyOwner {
+        _setTokenRoyalty(tokenId, receiver, feeNumerator);
+    }
+
+    function resetTokenRoyalty(uint256 tokenId) external onlyOwner {
+        _resetTokenRoyalty(tokenId);
     }
 
     // シードを生成する関数を作成します。
@@ -98,8 +134,19 @@ contract MyEpicNFT is ERC721URIStorage {
         return thirdWords[rand];
     }
 
+    function getMaxMints() public pure returns (uint256) {
+        return 20;
+    }
+
+    function getTotalMints() public view returns (uint256) {
+        return _tokenIds.current();
+    }
+
     // ユーザーが NFT を取得するために実行する関数です。
-    function makeAnEpicNFT() public {
+    function makeAnEpicNFT() public payable {
+        require(_tokenIds.current() + 1 < 20, "cannot mint over max 20nfts.");
+        require(msg.value >= 0.00001 ether, "needs fund 0.00001 ether.");
+
         // NFT が Mint されるときのカウンターをインクリメントします。
         _tokenIds.increment();
 
@@ -164,5 +211,7 @@ contract MyEpicNFT is ERC721URIStorage {
             newItemId,
             msg.sender
         );
+
+        emit NewEpicNFTMinted(msg.sender, newItemId);
     }
 }

@@ -30,8 +30,11 @@ describe('MyEpicNFT', function () {
     // コントラクトのインスタンスを生成し、デプロイを行います。
     const MyEpicNFTFactory = await ethers.getContractFactory('MyEpicNFT');
     const MyEpicNFT = await MyEpicNFTFactory.deploy();
+    const params = {
+      value: ethers.utils.parseEther("0.00001")
+    };
 
-    return { MyEpicNFT, owner, firstWords, secondWords, thirdWords };
+    return { MyEpicNFT, owner, firstWords, secondWords, thirdWords, params };
   }
 
   describe('pickRandomFirstWord', function () {
@@ -65,4 +68,65 @@ describe('MyEpicNFT', function () {
       expect(thirdWords).to.include(await MyEpicNFT.pickRandomThirdWord(0));
     });
   });
+
+  describe('makeAnEpicNFT', function () {
+    it('emit a NewEpicNFTMinted event', async function () {
+      const { MyEpicNFT, owner, params } = await loadFixture(deployMyEpicNFTFixture);
+
+      await expect(MyEpicNFT.makeAnEpicNFT(params))
+        .to.emit(MyEpicNFT, 'NewEpicNFTMinted')
+        .withArgs(owner.address, 1);
+    });
+    it('cannot make over max', async function () {
+      const { MyEpicNFT, params } = await loadFixture(
+        deployMyEpicNFTFixture,
+      );
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await expect(MyEpicNFT.makeAnEpicNFT(params)).to.be.revertedWith('cannot mint over max 20nfts.');
+    });
+    it('cannot mint without value', async function () {
+      const { MyEpicNFT } = await loadFixture(
+        deployMyEpicNFTFixture,
+      );
+      await expect(MyEpicNFT.makeAnEpicNFT()).to.be.revertedWith('needs fund 0.00001 ether.');
+    });
+  });
+  describe('getMaxMints', function () {
+    it('should get max mints', async function () {
+      const { MyEpicNFT } = await loadFixture(
+        deployMyEpicNFTFixture,
+      );
+      const maxMints = await MyEpicNFT.getMaxMints();
+      expect(maxMints).to.equal(20);
+    });
+  });  
+  describe('getTotalMints', function () {
+    it('should get total mints', async function () {
+      const { MyEpicNFT, params } = await loadFixture(
+        deployMyEpicNFTFixture,
+      );
+      await MyEpicNFT.makeAnEpicNFT(params);
+      await MyEpicNFT.makeAnEpicNFT(params);
+      const totalMints = await MyEpicNFT.getTotalMints();
+      expect(totalMints).to.equal(2);
+    });
+  });  
 });
